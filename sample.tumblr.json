@@ -1,0 +1,9 @@
+[
+	{
+		"url"          : "http://emergencykittens.tumblr.com/",
+		"img_path"     : "//*[@class=\"photo-wrapper-inner\"]//img",
+		"size_path"    : "//*[@id=\"pagination\"]/a",
+		"size_pattern" : "data-total-pages=\"(\\d+)",
+		"tags"         : [ "cute", "kittens" ]
+	}
+]
