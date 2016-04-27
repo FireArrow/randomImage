@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/FireArrow/randomImage.svg?branch=master)](https://travis-ci.org/FireArrow/randomImage)
 # randomImage
 Used to grab random image from configured sources according to tag
 
