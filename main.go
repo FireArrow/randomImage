@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/FireArrow/randomImage/sources"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
-	"randomImage/sources"
 	"strings"
 	"time"
 )

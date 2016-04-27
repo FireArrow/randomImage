@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/FireArrow/randomImage/sources"
 	"log"
 	"net/http"
-	"randomImage/sources"
 )
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
