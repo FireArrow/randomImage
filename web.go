@@ -9,26 +9,12 @@ import (
 )
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	tag := r.FormValue("tag")
-	img, source, err := randomImage(tag)
-
-	log.Printf("HTTP: Serving %v: %s", r.RemoteAddr, img)
-	if err != nil {
-		log.Println("HTTP: Error:", err)
-		if err.Error() == "error" {
-			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			w.WriteHeader(http.StatusNotFound)
-		}
-		w.Write([]byte(err.Error()))
-		return
-	}
-	w.Write(rootPage(img, source))
+	w.Write(rootPage())
 }
 
 func apiHandler(w http.ResponseWriter, r *http.Request) {
 	tag := r.FormValue("tag")
-	img, _, err := randomImage(tag)
+	img, err := randomImage(tag)
 
 	log.Printf("API:  Serving %v: %s", r.RemoteAddr, img)
 	if err != nil {
@@ -41,7 +27,15 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	http.Redirect(w, r, img, http.StatusTemporaryRedirect)
+
+	jsonImg, err := json.Marshal(img)
+	if err != nil {
+		log.Println("API:  Error:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsonErrorMsg("Failed to parse json"))
+		return
+	}
+	w.Write(jsonImg)
 }
 
 func tagHandler(w http.ResponseWriter, r *http.Request) {

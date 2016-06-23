@@ -57,7 +57,7 @@ func loadSources(filename string) {
 	}
 }
 
-func randomImage(tag string) (string, string, error) {
+func randomImage(tag string) (*image, error) {
 	var ok bool
 	var err error
 	var img string
@@ -69,7 +69,7 @@ func randomImage(tag string) (string, string, error) {
 		relevantSources = sourceSlice
 	} else {
 		if relevantSources, ok = sourceMap[tag]; !ok {
-			return "", "", fmt.Errorf("No tag \"%s\" found", tag)
+			return nil, fmt.Errorf("No tag \"%s\" found", tag)
 		}
 	}
 
@@ -78,14 +78,17 @@ func randomImage(tag string) (string, string, error) {
 		img, source, err = relevantSources[sourceIndex].GetRandomImage()
 		if err == nil {
 			if !blacklisted(img) {
-				return img, source, nil
+				return &image{
+					Url:    img,
+					Source: source,
+				}, nil
 			} else {
 				log.Println("randomImage: Got blacklisted. Trying again:", img)
 				i-- //getting a blacklisted img doesn't count as a try
 			}
 		}
 	}
-	return "error", "", err
+	return nil, err
 }
 
 func blacklisted(img string) bool {
@@ -148,5 +151,9 @@ func main() {
 	http.HandleFunc("/sexy/config/add/", addConfHandler)
 
 	log.Println("Serving")
-	http.ListenAndServe(servingAddress, nil)
+	err := http.ListenAndServe(servingAddress, nil)
+	if err != nil {
+		log.Println("Error while trying to serve:", err)
+	}
+	log.Println("Exiting")
 }
