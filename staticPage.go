@@ -32,8 +32,9 @@ img.originalsize {
 </style>
 
 <script type="text/javascript">
-var ajax = new XMLHttpRequest();
 var apiUrl = window.location.pathname + "api/" + window.location.search;
+var autoReloadDelay = 5000;
+var ajax = new XMLHttpRequest();
 ajax.onreadystatechange = function() {
 	if( this.readyState == 4 && this.status == 200 ) {
 		setImage(this.responseText);
@@ -49,7 +50,13 @@ function toggleSize() {
 	}
 }
 
-function toggleReload() {
+function autoReload() {
+	if( location.search.indexOf( "autoreload" ) > -1 ) {
+		window.setTimeout( function() {
+			reloadImage();
+			autoReload();
+		}, autoReloadDelay);
+	}
 }
 
 function setImage( randomImageMetaJson ) {
@@ -71,9 +78,14 @@ function reloadImage() {
 	ajax.send();
 }
 
+function setup() {
+	reloadImage();
+	autoReload();
+}
+
 </script>
 </head>
-<body onload="reloadImage()">
+<body onload="setup()">
 <img id="randomImage" class="scaledsize" onclick="toggleSize" />
 </body>
 </html>
