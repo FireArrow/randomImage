@@ -39,10 +39,16 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func tagHandler(w http.ResponseWriter, r *http.Request) {
-	tags := make([]string, 0, len(sourceMap))
-	for tag, _ := range sourceMap {
-		if !hidden(tag) {
-			tags = append(tags, tag)
+	var tags []string
+	mainOnly := r.FormValue("main")
+	if mainOnly == "true" {
+		tags = getMainTags()
+	} else {
+		tags = make([]string, 0, len(sourceMap))
+		for tag, _ := range sourceMap {
+			if !hidden(tag) {
+				tags = append(tags, tag)
+			}
 		}
 	}
 

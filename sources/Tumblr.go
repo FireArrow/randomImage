@@ -77,6 +77,10 @@ func (ts *TumblrSource) GetConfig() Config {
 	return ts.config
 }
 
+func (ts *TumblrSource) GetTags() []string {
+	return ts.config.Tags
+}
+
 func (ts *TumblrSource) updateSize() error {
 
 	resp, err := http.Get(ts.url)
@@ -98,6 +102,9 @@ func (ts *TumblrSource) updateSize() error {
 	defer nodes.Free()
 
 	node := nodes.NodeList().First()
+	if node == nil {
+		return fmt.Errorf("Error when getting first node from nodes. Error in config?")
+	}
 	size, err := ts.parseSize(node.String())
 	if err != nil {
 		return err

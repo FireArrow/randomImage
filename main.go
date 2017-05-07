@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 )
@@ -55,6 +56,25 @@ func loadSources(filename string) {
 			sourceMap[tag] = append(sourceMap[tag], ts)
 		}
 	}
+}
+
+func getMainTags() []string {
+	tagMap := make(map[string]struct{})
+	for _, source := range sourceSlice {
+		tags := source.GetTags()
+		if tags != nil {
+			sort.Strings(tags)
+			tagMap[tags[0]] = struct{}{}
+		}
+	}
+
+	mainTags := make([]string, len(tagMap))
+	i := 0
+	for tag, _ := range tagMap {
+		mainTags[i] = tag
+		i++
+	}
+	return mainTags
 }
 
 func randomImage(tag string) (*image, error) {
@@ -133,7 +153,7 @@ func setupHiddenTags(secrets ...string) {
 }
 
 func main() {
-	blacklistSize := 100
+	blacklistSize := 800
 	servingAddress := ":12345"
 
 	log.Println("Starting")
@@ -149,6 +169,7 @@ func main() {
 	http.HandleFunc("/sexy/tags/", tagHandler)
 	http.HandleFunc("/sexy/config/", confHandler)
 	http.HandleFunc("/sexy/config/add/", addConfHandler)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	log.Println("Serving")
 	err := http.ListenAndServe(servingAddress, nil)
