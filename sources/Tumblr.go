@@ -46,15 +46,15 @@ func validXpath(xp string) bool {
 
 func NewTumblrSource(config TumblrConfig) (*TumblrSource, error) {
 	if !validXpath(config.ImgPath) {
-		return nil, fmt.Errorf("Not valid xpath: %s", config.ImgPath)
+		return nil, fmt.Errorf("%v: Not valid xpath: %s", config.Url, config.ImgPath)
 	}
 	if !validXpath(config.SizePath) {
-		return nil, fmt.Errorf("Not valid xpath: %s", config.SizePath)
+		return nil, fmt.Errorf("%v: Not valid xpath: %s", config.Url, config.SizePath)
 	}
 
 	re, err := regexp.Compile(config.SizePattern)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to compile regexp: %v", err)
+		return nil, fmt.Errorf("%v: Failed to compile regexp: %v", config.Url, err)
 	}
 
 	ts := &TumblrSource{
@@ -85,25 +85,25 @@ func (ts *TumblrSource) updateSize() error {
 
 	resp, err := http.Get(ts.url)
 	if err != nil {
-		return fmt.Errorf("Failed to update size: %v", err)
+		return fmt.Errorf("%v: Failed to update size: %v", ts.url, err)
 	}
 	defer resp.Body.Close()
 
 	doc, err := libxml2.ParseHTMLReader(resp.Body)
 	if err != nil {
-		return fmt.Errorf("Failed to parse HTML: %v", err)
+		return fmt.Errorf("%v: Failed to parse HTML: %v", ts.url, err)
 	}
 	defer doc.Free()
 
 	nodes, err := doc.Find(ts.sizePath)
 	if err != nil {
-		return fmt.Errorf("Failed to apply xpath: %v", err)
+		return fmt.Errorf("%v: Failed to apply xpath: %v", ts.url, err)
 	}
 	defer nodes.Free()
 
 	node := nodes.NodeList().First()
 	if node == nil {
-		return fmt.Errorf("Error when getting first node from nodes. Error in config?")
+		return fmt.Errorf("%v: Error when getting first node from nodes. Error in config?", ts.url)
 	}
 	size, err := ts.parseSize(node.String())
 	if err != nil {
@@ -122,7 +122,7 @@ func (ts *TumblrSource) GetRandomImage() (string, string, error) {
 	pageNumber := rand.Int63n(ts.Size()) + 1 //Page numbers are 1-indexed, and rand is [0-n)
 	images, source, err := ts.ListPage(pageNumber)
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to get image: %v", err)
+		return "", "", fmt.Errorf("%v: Failed to get image: %v", ts.url, err)
 	}
 
 	imageNumber := rand.Intn(len(images))
@@ -140,13 +140,13 @@ func (ts *TumblrSource) ListPage(pageNumber int64) ([]string, string, error) {
 
 	doc, err := libxml2.ParseHTMLReader(resp.Body)
 	if err != nil {
-		return retVal, fullUrl, fmt.Errorf("Failed to parse HTML: %v", err)
+		return retVal, fullUrl, fmt.Errorf("%v: Failed to parse HTML: %v", ts.url, err)
 	}
 	defer doc.Free()
 
 	nodes, err := doc.Find(ts.imgPath)
 	if err != nil {
-		return retVal, fullUrl, fmt.Errorf("Failed to apply xpath: %v", err)
+		return retVal, fullUrl, fmt.Errorf("%v: Failed to apply xpath: %v", ts.url, err)
 	}
 	defer nodes.Free()
 
@@ -171,15 +171,15 @@ func (ts *TumblrSource) parseSize(s string) (int64, error) {
 
 	matches := ts.sizePattern.FindStringSubmatch(s)
 	if matches == nil {
-		return 1, fmt.Errorf("No match for size in \"%s\"", s)
+		return 1, fmt.Errorf("%v: No match for size in \"%s\"", ts.url, s)
 	}
 	if len(matches) < 2 {
-		return 1, fmt.Errorf("Failed to match size from \"%s\"", s)
+		return 1, fmt.Errorf("%v: Failed to match size from \"%s\"", ts.url, s)
 	}
 
 	size, err := strconv.ParseInt(matches[1], 10, 64)
 	if err != nil {
-		return 1, fmt.Errorf("Failed to parse int from \"%s\"\n", matches[1])
+		return 1, fmt.Errorf("%v: Failed to parse int from \"%s\"\n", ts.url, matches[1])
 	}
 
 	return size, nil
