@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/FireArrow/randomImage/sources"
 	"io/ioutil"
@@ -17,6 +18,7 @@ var sourceSlice []sources.Source
 var sourceMap map[string][]sources.Source
 var blacklist []string
 var hiddenTags map[string]struct{}
+var servingAddress = flag.String("addr", ":12345", "Listening address")
 
 func listFiveRandoms(s sources.Source) {
 	for i := 0; i < 5; i++ {
@@ -153,26 +155,31 @@ func setupHiddenTags(secrets ...string) {
 }
 
 func main() {
-	blacklistSize := 800
-	servingAddress := ":12345"
+	blacklistSize := flag.Int("blsize", 800, "Size of the backlist")
+	rawBasePath := flag.String("basepath", "", "Base path, e.g. \"/test\" would cause server to listen to host:post/test/")
+	flag.Parse()
 
 	log.Println("Starting")
 	rand.Seed(time.Now().UnixNano())
-	setupBlacklist(blacklistSize)
+	setupBlacklist(*blacklistSize)
+
+	basePath := fmt.Sprintf("/%v", strings.Trim(*rawBasePath, "/ "))
+	if len(basePath) == 1 {
+		basePath = ""
+	}
 
 	log.Println("Loading config")
 	loadSources("tumblr.json")
 
-	log.Println("Setting up handlers")
-	http.HandleFunc("/sexy/", rootHandler)
-	http.HandleFunc("/sexy/api/", apiHandler)
-	http.HandleFunc("/sexy/tags/", tagHandler)
-	http.HandleFunc("/sexy/config/", confHandler)
-	http.HandleFunc("/sexy/config/add/", addConfHandler)
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	log.Println("Setting up handlers, base", basePath+"/")
+	http.Handle(basePath+"/", http.StripPrefix(basePath+"/", http.FileServer(http.Dir("static"))))
+	http.HandleFunc(basePath+"/api/", apiHandler)
+	http.HandleFunc(basePath+"/tags/", tagHandler)
+	http.HandleFunc(basePath+"/config/", confHandler)
+	http.HandleFunc(basePath+"/config/add/", addConfHandler)
 
-	log.Println("Serving")
-	err := http.ListenAndServe(servingAddress, nil)
+	log.Println("Serving on", *servingAddress)
+	err := http.ListenAndServe(*servingAddress, nil)
 	if err != nil {
 		log.Println("Error while trying to serve:", err)
 	}

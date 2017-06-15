@@ -8,10 +8,6 @@ import (
 	"net/http"
 )
 
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write(rootPage())
-}
-
 func apiHandler(w http.ResponseWriter, r *http.Request) {
 	tag := r.FormValue("tag")
 	img, err := randomImage(tag)
